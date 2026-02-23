@@ -2,6 +2,19 @@
 
 ## 🚀 Pasos para desplegar en Firebase
 
+```bash
+firebase deploy --only hosting
+```
+
+Firebase te dará una URL del tipo:
+```
+https://filmvault-app-xxxxx.web.app
+```
+
+---
+
+## Pasos para crear el proyecto en Firebase
+
 ### 1. Instalar Firebase CLI
 
 ```bash
