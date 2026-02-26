@@ -1,77 +1,255 @@
-# webappReact
+# 🎬 CineApp
 
-## 🚀 Pasos para desplegar en Firebase
+Aplicación web de catálogo cinematográfico desarrollada con **React + Bootstrap + Firebase**, siguiendo una **arquitectura hexagonal** (puertos y adaptadores).
 
-```bash
-firebase deploy --only hosting
+---
+
+## 📁 Estructura del proyecto
+
 ```
-
-Firebase te dará una URL del tipo:
-```
-https://filmvault-app-xxxxx.web.app
+src/
+├── core/                           # Capa de dominio y aplicación
+│   ├── domain/
+│   │   ├── entities/               # Entidades del dominio (Movie)
+│   │   └── ports/                  # Interfaces/contratos de repositorios
+│   └── application/
+│       └── usecases/               # Casos de uso (lógica de negocio)
+├── infrastructure/
+│   └── firebase/                   # Implementaciones Firebase de los puertos
+│       ├── config.js
+│       ├── FirebaseMovieRepository.js
+│       ├── FirebaseCommentRepository.js
+│       ├── FirebaseFavoriteRepository.js
+│       ├── FirebaseAuthRepository.js
+│       └── seedMovies.js           # Script de datos iniciales
+└── presentation/                   # Capa de presentación (React)
+    ├── components/
+    │   ├── auth/                   # AuthModal
+    │   ├── common/                 # Navbar, Footer, LoadingSpinner
+    │   └── movies/                 # MovieCard, StarRating, CommentSection
+    ├── context/                    # AuthContext
+    ├── hooks/                      # useMovies, useMovie
+    ├── pages/                      # HomePage, MovieDetailPage, FavoritesPage, etc.
+    └── styles/                     # CSS global
 ```
 
 ---
 
-## Pasos para crear el proyecto en Firebase
+## ⚙️ Configuración inicial
 
-### 1. Instalar Firebase CLI
+### 1. Requisitos previos
+
+- Node.js >= 18
+- npm >= 9
+- Firebase CLI: `npm install -g firebase-tools`
+
+### 2. Instalar dependencias
 
 ```bash
-npm install -g firebase-tools
+cd cineapp
+npm install
 ```
 
-### 2. Iniciar sesión en Firebase
+### 3. Configurar Firebase
+
+1. Ve a [Firebase Console](https://console.firebase.google.com)
+2. Abre el proyecto **webappreact-5bbca**
+3. En **Configuración del proyecto → Aplicaciones web**, copia la configuración
+4. Edita `src/infrastructure/firebase/config.js` y reemplaza los valores:
+
+```js
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "webappreact-5bbca.firebaseapp.com",
+  projectId: "webappreact-5bbca",
+  storageBucket: "webappreact-5bbca.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+```
+
+### 4. Activar servicios en Firebase Console
+
+- **Authentication** → Habilitar proveedor **Email/Contraseña**
+- **Firestore Database** → Crear base de datos en modo **producción**
+- **Hosting** → Activar (se configura automáticamente)
+
+### 5. Aplicar reglas de Firestore
 
 ```bash
 firebase login
+firebase deploy --only firestore:rules
 ```
 
-Se abrirá el navegador para autenticarte con tu cuenta de Google.
+### 6. Poblar la base de datos con películas
 
-### 3. Crear un proyecto en Firebase Console
+En `src/App.jsx`, importa y llama la función seed **una sola vez**:
 
-1. Ve a [https://console.firebase.google.com](https://console.firebase.google.com)
-2. Haz clic en **"Agregar proyecto"**
-3. Ponle un nombre, por ejemplo: `filmvault-app`
-4. Sigue los pasos del asistente
+```jsx
+// En App.jsx, añadir temporalmente:
+import { seedMovies } from './infrastructure/firebase/seedMovies';
 
-### 4. Vincular tu proyecto
-
-Edita el archivo `.firebaserc` y reemplaza `tu-proyecto-filmvault` con el **ID real de tu proyecto**:
-
-```json
-{
-  "projects": {
-    "default": "filmvault-app-xxxxx"
-  }
-}
+// Dentro del componente App, en un useEffect:
+useEffect(() => {
+  seedMovies(); // Ejecutar una sola vez, luego eliminar
+}, []);
 ```
 
-También puedes hacerlo por CLI:
+Después de ejecutar la app y ver "✅ Movies seeded successfully!" en la consola, **elimina estas líneas**.
+
+---
+
+## 🚀 Desarrollo local
 
 ```bash
-firebase use --add
+npm start
 ```
 
-### 5. Inicializar Firebase Hosting (si no tienes firebase.json)
+La app se abrirá en http://localhost:3000
+
+---
+
+## 🌐 Despliegue en Firebase Hosting
+
+### Opción A: Despliegue completo (recomendado)
 
 ```bash
-firebase init hosting
-```
+# 1. Login en Firebase
+firebase login
 
-Cuando te pregunte:
-- **Public directory:** `.` (punto, directorio actual)
-- **Configure as single-page app:** `Yes`
-- **Overwrite index.html:** `No` (usamos filmvault.html)
+# 2. Build de producción
+npm run build
 
-### 6. Desplegar
-
-```bash
+# 3. Desplegar en Firebase Hosting
 firebase deploy --only hosting
 ```
 
-Firebase te dará una URL del tipo:
+La URL de tu app será: `https://webappreact-5bbca.web.app`
+
+### Opción B: Despliegue con script npm
+
+```bash
+npm run deploy
 ```
-https://filmvault-app-xxxxx.web.app
+
+Este script ejecuta automáticamente `npm run build` y luego `firebase deploy`.
+
+### Desplegar también las reglas de Firestore
+
+```bash
+firebase deploy --only firestore:rules,hosting
 ```
+
+---
+
+## ✨ Funcionalidades
+
+| Funcionalidad | Descripción |
+|---|---|
+| 📽️ Catálogo | Grid de películas con búsqueda y filtros por género |
+| 🎬 Ficha de película | Detalle completo: sinopsis, reparto, puntuación media |
+| ⭐ Valoraciones | Usuarios registrados puntúan del 1 al 5 |
+| 💬 Comentarios | Hilo de comentarios por película |
+| ❤️ Favoritos | Lista personal de películas favoritas |
+| 🔐 Autenticación | Registro e inicio de sesión con email/contraseña |
+| 📄 Páginas estáticas | Contacto y Aviso Legal |
+
+---
+
+## 🏗️ Arquitectura Hexagonal
+
+El proyecto sigue el patrón **Puertos y Adaptadores**:
+
+- **Dominio** (`core/domain`): Entidades puras y contratos (ports) sin dependencias externas
+- **Aplicación** (`core/application`): Casos de uso que orquestan la lógica de negocio
+- **Infraestructura** (`infrastructure`): Implementaciones concretas de Firebase
+- **Presentación** (`presentation`): Componentes React, hooks y páginas
+
+Esto permite cambiar fácilmente el backend (ej: de Firebase a otra API) modificando solo la capa de infraestructura.
+
+---
+
+## 🛠️ Stack tecnológico
+
+- **React 18** · UI declarativa con hooks
+- **React Router v6** · Navegación SPA
+- **Bootstrap 5 + Bootstrap Icons** · Estilos y componentes (tema claro)
+- **Firebase 10** · Auth, Firestore, Hosting
+- **Google Fonts (Inter)** · Tipografía moderna
+
+## Como añadir muchas peliculas más
+
+1. Editar "src/infrastructure/firebase/seedMovies.js" e introducirlas en el formato json como lo están ahora mismo, recuerda el id de pelicula que no se repita
+2. Modificar el App.jsx con el siguiente código:
+```
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './presentation/context/AuthContext';
+import Navbar from './presentation/components/common/Navbar';
+import Footer from './presentation/components/common/Footer';
+import HomePage from './presentation/pages/HomePage';
+import MovieDetailPage from './presentation/pages/MovieDetailPage';
+import FavoritesPage from './presentation/pages/FavoritesPage';
+import ContactPage from './presentation/pages/ContactPage';
+import LegalPage from './presentation/pages/LegalPage';
+import './presentation/styles/index.css';
+import { seedMovies } from './infrastructure/firebase/seedMovies';
+
+const App = () => {
+  useEffect(() => {
+    // Ejecutar solo en desarrollo y solo una vez. Elimina esto despues de usar.
+    if (process.env.NODE_ENV !== 'development') return;
+    try {
+      const seeded = localStorage.getItem('seeded_movies_v1');
+      if (!seeded) {
+        seedMovies()
+          .then(() => {
+            localStorage.setItem('seeded_movies_v1', new Date().toISOString());
+            console.log('seedMovies completed and will not run again.');
+          })
+          .catch((err) => console.error('seedMovies error:', err));
+      }
+    } catch (e) {
+      console.error('seedMovies setup error:', e);
+    }
+  }, []);
+
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <div id="root-layout" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Navbar />
+          <main style={{ flex: 1 }}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/movies/:id" element={<MovieDetailPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/legal" element={<LegalPage />} />
+              <Route
+                path="*"
+                element={
+                  <div className="container py-5 text-center">
+                    <i className="bi bi-exclamation-circle fs-1 text-muted d-block mb-3 opacity-25"></i>
+                    <h3 className="fw-bold">404 · Página no encontrada</h3>
+                    <p className="text-muted">La página que buscas no existe.</p>
+                    <a href="/" className="btn btn-primary">
+                      <i className="bi bi-house-door me-2"></i>Volver al inicio
+                    </a>
+                  </div>
+                }
+              />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+};
+
+export default App;
+```
+3. Modificar la regla de la base de datos, quitar el comentario en la regla comentada en la sexta línea
+4. npm start
+5. Eliminar "seeded_movies_v1" del Local_Storage
