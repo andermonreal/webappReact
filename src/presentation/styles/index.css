@@ -127,6 +127,14 @@ main {
   object-fit: cover;
 }
 
+/* custom badges */
+.favorite-badge {
+  /* gradient similar to provided snippet */
+  background: linear-gradient(90deg, #ffeef0, #fff0f3, #ffeef0);
+  border-bottom: 1px solid #fecdd3;
+  color: #dc3545; /* red text */
+}
+
 /* Smooth page transitions */
 .container {
   animation: fadeIn 0.3s ease;

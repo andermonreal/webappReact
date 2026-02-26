@@ -250,5 +250,6 @@ const App = () => {
 
 export default App;
 ```
-3. npm start
-4. Eliminar "seeded_movies_v1" del Local_Storage
+3. Modificar la regla de la base de datos, quitar el comentario en la regla comentada en la sexta línea
+4. npm start
+5. Eliminar "seeded_movies_v1" del Local_Storage

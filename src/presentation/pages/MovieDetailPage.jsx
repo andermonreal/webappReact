@@ -25,6 +25,7 @@ const MovieDetailPage = () => {
   const [ratingMsg, setRatingMsg] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+  const [favMsg, setFavMsg] = useState('');
 
   useEffect(() => {
     if (currentUser && id) {
@@ -56,9 +57,12 @@ const MovieDetailPage = () => {
   const handleToggleFavorite = async () => {
     if (!currentUser) return setShowAuth(true);
     setFavLoading(true);
+    setFavMsg('');
     try {
       const added = await toggleFavorite(currentUser.uid, movie);
       setIsFavorite(added);
+      setFavMsg(added ? '¡Añadida a favoritos!' : 'Eliminada de favoritos');
+      setTimeout(() => setFavMsg(''), 3000);
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,6 +88,19 @@ const MovieDetailPage = () => {
 
   return (
     <>
+      {/* Favorite banner — shown when marked as favorite */}
+      {isFavorite && (
+        <div
+          className="py-2 text-center"
+          style={{ background: 'linear-gradient(90deg, #ffeef0, #fff0f3, #ffeef0)', borderBottom: '1px solid #fecdd3' }}
+        >
+          <span className="text-danger fw-semibold small">
+            <i className="bi bi-heart-fill me-2"></i>
+            Esta película está en tu lista de favoritos
+          </span>
+        </div>
+      )}
+
       <div className="container py-5">
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="mb-4">
@@ -102,13 +119,25 @@ const MovieDetailPage = () => {
           {/* Poster */}
           <div className="col-md-4 col-lg-3">
             <div className="position-sticky" style={{ top: '100px' }}>
-              <img
-                src={movie.posterUrl || 'https://via.placeholder.com/300x450?text=Sin+Imagen'}
-                alt={`Póster de ${movie.title}`}
-                className="img-fluid rounded-3 shadow w-100"
-                style={{ objectFit: 'cover', maxHeight: 450 }}
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/300x450?text=Sin+Imagen'; }}
-              />
+              <div className="position-relative">
+                <img
+                  src={movie.posterUrl || 'https://via.placeholder.com/300x450?text=Sin+Imagen'}
+                  alt={`Póster de ${movie.title}`}
+                  className="img-fluid rounded-3 shadow w-100"
+                  style={{ objectFit: 'cover', maxHeight: 450 }}
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/300x450?text=Sin+Imagen'; }}
+                />
+                {/* Favorite badge on poster */}
+                {isFavorite && (
+                  <div
+                    className="position-absolute bottom-0 start-0 end-0 d-flex align-items-center justify-content-center py-2 rounded-bottom-3"
+                    style={{ background: 'rgba(220,38,38,0.88)', backdropFilter: 'blur(4px)' }}
+                  >
+                    <i className="bi bi-heart-fill text-white me-2"></i>
+                    <span className="text-white fw-semibold small">En tus favoritos</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -120,6 +149,11 @@ const MovieDetailPage = () => {
               <span className="badge bg-light text-secondary border">
                 <i className="bi bi-clock me-1"></i>{movie.duration}
               </span>
+              {isFavorite && (
+                <span className="badge bg-danger">
+                  <i className="bi bi-heart-fill me-1"></i>Favorita
+                </span>
+              )}
             </div>
 
             <h1 className="fw-bold text-dark mb-1">{movie.title}</h1>
@@ -168,60 +202,85 @@ const MovieDetailPage = () => {
               </div>
             )}
 
-            {/* Actions */}
+            {/* Actions card */}
             <div className="card border-0 shadow-sm p-4">
               <div className="row g-4">
-                {/* Rating */}
-                <div className="col-md-6">
-                  <h6 className="fw-bold mb-1">
-                    <i className="bi bi-star me-2 text-warning"></i>Tu valoración
+                {/* Rating section */}
+                <div className="col-md-6 border-end-md">
+                  <h6 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <i className="bi bi-star-fill text-warning"></i>Tu valoración
                   </h6>
                   {currentUser ? (
                     <>
+                      <p className="text-muted small mb-2">
+                        {userRating > 0 ? `Has puntuado esta película con ${userRating}/5` : 'Aún no has puntuado esta película'}
+                      </p>
                       <div className="d-flex align-items-center gap-2">
                         <StarRating value={userRating} onChange={handleRate} size="lg" />
                         {ratingLoading && <span className="spinner-border spinner-border-sm text-primary" />}
                       </div>
-                      {userRating > 0 && (
-                        <small className="text-muted mt-1 d-block">
-                          Tu puntuación: {userRating}/5
-                        </small>
-                      )}
                       {ratingMsg && (
-                        <div className={`alert py-1 px-2 mt-2 small ${ratingMsg.includes('!') ? 'alert-success' : 'alert-warning'}`}>
+                        <div className={`alert py-1 px-2 mt-2 small mb-0 ${ratingMsg.includes('!') ? 'alert-success' : 'alert-warning'}`}>
+                          <i className={`bi ${ratingMsg.includes('!') ? 'bi-check-circle' : 'bi-exclamation-circle'} me-1`}></i>
                           {ratingMsg}
                         </div>
                       )}
                     </>
                   ) : (
-                    <button className="btn btn-outline-warning btn-sm" onClick={() => setShowAuth(true)}>
-                      <i className="bi bi-star me-2"></i>Accede para valorar
-                    </button>
+                    <div className="text-center py-2">
+                      <p className="text-muted small mb-2">Inicia sesión para valorar</p>
+                      <button className="btn btn-outline-warning btn-sm" onClick={() => setShowAuth(true)}>
+                        <i className="bi bi-star me-2"></i>Valorar película
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                {/* Favorite */}
+                {/* Favorite section */}
                 <div className="col-md-6">
-                  <h6 className="fw-bold mb-1">
-                    <i className="bi bi-heart me-2 text-danger"></i>Favoritos
+                  <h6 className="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <i className={`bi ${isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart text-danger'}`}></i>
+                    Favoritos
                   </h6>
                   {currentUser ? (
-                    <button
-                      className={`btn ${isFavorite ? 'btn-danger' : 'btn-outline-danger'} btn-sm`}
-                      onClick={handleToggleFavorite}
-                      disabled={favLoading}
-                    >
-                      {favLoading ? (
-                        <span className="spinner-border spinner-border-sm me-2" />
-                      ) : (
-                        <i className={`bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'} me-2`}></i>
+                    <>
+                      {/* Big prominent favorite toggle */}
+                      <button
+                        className={`btn w-100 fw-semibold py-2 mt-1 ${isFavorite
+                            ? 'btn-danger'
+                            : 'btn-outline-danger'
+                          }`}
+                        onClick={handleToggleFavorite}
+                        disabled={favLoading}
+                        style={{ transition: 'all 0.2s' }}
+                      >
+                        {favLoading ? (
+                          <><span className="spinner-border spinner-border-sm me-2" />Actualizando...</>
+                        ) : isFavorite ? (
+                          <><i className="bi bi-heart-fill me-2"></i>En tu lista de favoritos</>
+                        ) : (
+                          <><i className="bi bi-heart me-2"></i>Añadir a favoritos</>
+                        )}
+                      </button>
+                      {isFavorite && (
+                        <p className="text-muted small mt-2 mb-0 text-center">
+                          <i className="bi bi-info-circle me-1"></i>
+                          Puedes verla en <Link to="/favorites" className="text-danger">tu lista</Link>
+                        </p>
                       )}
-                      {isFavorite ? 'En favoritos' : 'Añadir a favoritos'}
-                    </button>
+                      {favMsg && (
+                        <div className={`alert py-1 px-2 mt-2 small mb-0 ${isFavorite ? 'alert-danger' : 'alert-secondary'}`}>
+                          <i className="bi bi-check-circle me-1"></i>{favMsg}
+                        </div>
+                      )}
+                    </>
                   ) : (
-                    <button className="btn btn-outline-danger btn-sm" onClick={() => setShowAuth(true)}>
-                      <i className="bi bi-heart me-2"></i>Accede para guardar
-                    </button>
+                    <div className="text-center py-2">
+                      <p className="text-muted small mb-2">Inicia sesión para guardar favoritos</p>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => setShowAuth(true)}>
+                        <i className="bi bi-heart me-2"></i>Guardar como favorita
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
